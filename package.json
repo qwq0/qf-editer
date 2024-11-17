@@ -1,0 +1,29 @@
+{
+  "name": "qf-editer",
+  "version": "1.0.0",
+  "description": "适用于 qwq-frame 的 ui 编辑器  \r 旨在更快的设计 ui",
+  "main": "./src/main.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qwq0/qf-editer.git"
+  },
+  "keywords": [
+    "qwqframe"
+  ],
+  "author": "qwq0",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/qwq0/qf-editer/issues"
+  },
+  "homepage": "https://github.com/qwq0/qf-editer#readme",
+  "dependencies": {
+    "@types/wicg-file-system-access": "^2023.10.5"
+  }
+}
