@@ -5,7 +5,8 @@ export let body = getNElement(document.body);
 body.setStyles({
     width: "100%",
     height: "100%",
-    margin: "0"
+    margin: "0",
+    overflow: "hidden"
 });
 
 body.getParent().setStyles({

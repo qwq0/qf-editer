@@ -1,33 +1,49 @@
-import { EventHandler, eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
+import { delayPromise, EventHandler, eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
 import { projectContext } from "../context.js";
 import { buttonAsse } from "../ui/button.js";
+import { CursorMenu } from "../ui/CursorMenu.js";
+import { showInfoBox, showInputBox } from "../ui/infobox.js";
+import { showMenu } from "../ui/menu.js";
+import { showNotice } from "../ui/Notice.js";
 import { createLeftBarPage } from "./leftBarPage.js";
 
 
 let ignoredDirectorySet = new Set([".git"]);
+
+/**
+ * 目录节点
+ */
 class DirectoryNode
 {
+    /**
+     * 文件夹名
+     */
     name = "";
 
     /**
+     * 子目录节点
      * @type {Array<DirectoryNode>}
      */
     childs = [];
 
     /**
+     * 子文件
      * @type {Array<{
      *  name: string,
-     *  element?: NElement
+     *  element?: NElement,
+     *  handle: FileSystemFileHandle
      * }>}
      */
     files = [];
 
     /**
+     * 元素
      * @type {NElement}
      */
     element = null;
 
     /**
+     * 文件夹句柄
      * @type {FileSystemDirectoryHandle}
      */
     handle = null;
@@ -51,8 +67,14 @@ class DirectoryNode
         this.element = DirectoryNode.createElement(name, deepth, this);
     }
 
+    /**
+     * 刷新文件内容
+     */
     async refresh()
     {
+        if (!this.handle)
+            return;
+
         let entries = await Array.fromAsync(this.handle.entries());
         entries.sort((x, y) =>
         {
@@ -63,27 +85,34 @@ class DirectoryNode
             else
                 return 0;
         });
+
+        /**
+         * 子节点数组索引
+         */
         let directoryInd = 0;
+        /**
+         * 文件数组索引
+         */
         let fileInd = 0;
         for (let o of entries)
         {
             if (o[1].kind == "directory")
-            {
+            { // 文件夹
                 if (ignoredDirectorySet.has(o[0]))
                     continue;
 
                 while (directoryInd < this.childs.length && this.childs[directoryInd].name < o[0])
-                {
+                { // 已经不存在
                     this.childs[directoryInd].nodeRemoved();
                     this.childs.splice(directoryInd, 1);
                 }
 
                 if (directoryInd < this.childs.length && this.childs[directoryInd].name == o[0])
-                {
+                { // 不变的
                     directoryInd++;
                 }
                 else
-                {
+                { // 原先不存在的
                     let node = new DirectoryNode(o[0], this.deepth + 1);
                     node.handle = o[1];
                     this.childs.splice(directoryInd, 0, node);
@@ -98,23 +127,24 @@ class DirectoryNode
                 }
             }
             else if (o[1].kind == "file")
-            {
+            { // 文件
                 while (fileInd < this.files.length && this.files[fileInd].name < o[0])
-                {
+                { // 已经不存在的
                     if (this.files[fileInd].element)
                         this.files[fileInd].element.remove();
                     this.files.splice(fileInd, 1);
                 }
 
                 if (fileInd < this.files.length && this.files[fileInd].name == o[0])
-                {
+                { // 不变的
                     fileInd++;
                 }
                 else
-                {
+                { // 原先不存在的
                     let node = {
                         name: o[0],
-                        element: DirectoryNode.createElement(o[0], this.deepth + 1)
+                        element: DirectoryNode.createElement(o[0], this.deepth + 1),
+                        handle: o[1]
                     };
                     this.files.splice(fileInd, 0, node);
                     if (this.unfolded)
@@ -131,18 +161,22 @@ class DirectoryNode
             }
         }
         while (directoryInd < this.childs.length)
-        {
+        { // 还未处理的已经不存在的文件夹
             this.childs[directoryInd].nodeRemoved();
             this.childs.splice(directoryInd, 1);
         }
         while (fileInd < this.files.length)
-        {
+        { // 还未处理的已经不存在的文件
             if (this.files[fileInd].element)
                 this.files[fileInd].element.remove();
             this.files.splice(fileInd, 1);
         }
     }
 
+    /**
+     * 移除节点
+     * 移除此节点和所有子节点
+     */
     nodeRemoved()
     {
         if (this.unfolded)
@@ -167,6 +201,10 @@ class DirectoryNode
         });
     }
 
+    /**
+     * 折叠文件夹
+     * 隐藏所有子节点
+     */
     fold()
     {
         if (this.unfolded)
@@ -187,6 +225,10 @@ class DirectoryNode
         }
     }
 
+    /**
+     * 展开文件夹
+     * 同时会刷新子节点
+     */
     unfold()
     {
         if (!this.unfolded)
@@ -209,6 +251,7 @@ class DirectoryNode
     }
 
     /**
+     * 创建列表项显示元素
      * @param {string} name
      * @param {number} deepth
      * @param {DirectoryNode} [directoryNode]
@@ -248,16 +291,111 @@ class DirectoryNode
             name,
 
             eventName.click((e) =>
-            {
+            { // 左键
+                e.stopPropagation();
                 if (directoryNode)
-                {
+                { // 文件夹
                     if (directoryNode.unfolded)
                         directoryNode.fold();
                     else
                         directoryNode.unfold();
                 }
                 else
-                { }
+                { // 文件
+
+                }
+            }),
+            eventName.contextmenu((e) =>
+            { // 右键
+                e.stopPropagation();
+                e.preventDefault();
+                if (directoryNode)
+                { // 文件夹
+                    if (!directoryNode.handle)
+                        return;
+                    CursorMenu.showMenu([
+                        {
+                            text: "新建文件",
+                            callback: async () =>
+                            {
+                                let name = await showInputBox("创建文件", "请输入文件夹名", true);
+                                if (name != undefined)
+                                {
+                                    if (name != "")
+                                    {
+                                        try
+                                        {
+                                            await directoryNode.handle.getFileHandle(name, { create: false });
+                                            showNotice("创建失败", "文件已经存在");
+                                            return;
+                                        }
+                                        catch (err) { }
+
+                                        try
+                                        {
+                                            await directoryNode.handle.getFileHandle(name, { create: true });
+                                            await delayPromise(120);
+                                            directoryNode.unfold();
+                                        }
+                                        catch (err)
+                                        {
+                                            console.error(err);
+                                            showNotice("创建失败", "创建文件失败");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        showNotice("创建失败", "文件名不可为空");
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            text: "新建文件夹",
+                            callback: async () =>
+                            {
+                                let name = await showInputBox("创建文件夹", "请输入文件夹名", true);
+                                if (name != undefined)
+                                {
+                                    if (name != "")
+                                    {
+                                        try
+                                        {
+                                            await directoryNode.handle.getDirectoryHandle(name, { create: false });
+                                            showNotice("创建失败", "文件夹已经存在");
+                                            return;
+                                        }
+                                        catch (err) { }
+
+                                        try
+                                        {
+                                            await directoryNode.handle.getDirectoryHandle(name, { create: true });
+                                            await delayPromise(120);
+                                            directoryNode.unfold();
+                                        }
+                                        catch (err)
+                                        {
+                                            console.error(err);
+                                            showNotice("创建失败", "创建文件夹失败");
+                                        }
+                                    }
+                                    else
+                                    {
+                                        showNotice("创建失败", "文件夹名不可为空");
+                                    }
+                                }
+                            }
+                        }
+                    ], e.clientX, e.clientY);
+                }
+                else
+                { // 文件
+                    CursorMenu.showMenu([
+                        {
+                            text: "(空)"
+                        }
+                    ], e.clientX, e.clientY);
+                }
             }),
             eventName.mouseenter((e, ele) =>
             {
@@ -304,17 +442,28 @@ export function initFileExplorer()
 
     let fileTree = new DirectoryNode("", 0);
 
+    setInterval(() =>
+    {
+        fileTree.refresh();
+    }, 3900);
+
     /**
      * 更新文件树
      */
     async function updateFileTree()
     {
         fileTree.handle = projectContext.fileSystemDirectoryHandle;
+        fileTree.name = projectContext.fileSystemDirectoryHandle.name;
         // fileExplorerTree.removeChilds();
         fileTree.unfold();
     }
 
     createLeftBarPage("fileExplorer", NList.getElement([
+        styles({
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+        }),
         "fe"
     ]), NList.getElement([
         styles({
@@ -326,7 +475,13 @@ export function initFileExplorer()
             overflow: "auto",
             scrollbarWidth: "none"
         }),
-        [],
+        [
+            "资源管理器",
+            styles({
+                color: "rgb(120, 120, 120)",
+                alignSelf: "start"
+            })
+        ],
         [
             buttonAsse,
             "打开项目",
@@ -339,13 +494,41 @@ export function initFileExplorer()
                         mode: "readwrite",
                         startIn: "desktop"
                     });
+
+                    let hasConfigFile = false;
+                    try
+                    {
+                        if (await fileSystemDirectoryHandle.getFileHandle("qfe.config.json", { create: false }))
+                        {
+                            hasConfigFile = true;
+                        }
+                    }
+                    catch (err)
+                    { }
+                    if (!hasConfigFile)
+                    {
+                        let confirm = await showInfoBox("初始化项目", `无法找到qfe.config.json\n确认打开项目将自动创建此文件`, true);
+                        if (confirm)
+                        {
+                            let configFileHandle = await fileSystemDirectoryHandle.getFileHandle("qfe.config.json", { create: true });
+                            let configWriteable = await configFileHandle.createWritable({ keepExistingData: false });
+                            await configWriteable.write((new TextEncoder()).encode("{}"));
+                            await configWriteable.close();
+                        }
+                        else 
+                        {
+                            return;
+                        }
+                    }
+
+                    projectContext.info.projectName = fileSystemDirectoryHandle.name;
                     projectContext.fileSystemDirectoryHandle = fileSystemDirectoryHandle;
                     updateFileTree();
                 }
             })
         ],
 
-        [
+        [ // 文件树菜单
             styles({
                 width: "100%",
                 minHeight: "500px",
@@ -359,7 +542,21 @@ export function initFileExplorer()
                 styles({
                     display: "none"
                 })
-            ])
+            ]),
+
+            [
+                styles({
+                    width: "100%",
+                    height: "50px",
+                }),
+            ],
+
+            eventName.contextmenu(e =>
+            {
+                e.preventDefault();
+                e.stopPropagation();
+                (/** @type {HTMLDivElement} */(fileTree.element.node)).dispatchEvent(new MouseEvent("contextmenu", e));
+            })
         ]
     ]));
 }

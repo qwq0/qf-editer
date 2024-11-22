@@ -1,6 +1,8 @@
 import { bindArrayHook, bindValue, NAttr, NList, nTagName, NTagName, styles } from "../lib/qwqframe.js";
-import { leftBarContext } from "./context.js";
+import { leftBarContext, projectContext } from "./context.js";
+import { initEditer } from "./editer/initEditer.js";
 import { initLeftBar } from "./leftBar/initLeftBar.js";
+import { initRightBar } from "./rightBar/initRightBar.js";
 import { body } from "./ui/body.js";
 
 (() =>
@@ -10,7 +12,8 @@ import { body } from "./ui/body.js";
             height: "100%",
             width: "100%",
             backgroundColor: "rgb(0, 0, 0)",
-            userSelect: "none"
+            userSelect: "none",
+            position: "fixed"
         }),
 
         [ // 顶栏
@@ -19,8 +22,18 @@ import { body } from "./ui/body.js";
                 height: "36px",
                 width: "100%",
                 top: "0",
-                backgroundColor: "rgb(40, 40, 40)"
-            })
+                backgroundColor: "rgb(40, 40, 40)",
+                color: "rgb(210, 210, 210)",
+                display: "flex",
+                justifyContent: "center"
+            }),
+
+            [
+                bindValue(projectContext.info, "projectName", o => (o ? `${o} - Q Frame Editer` : "Q Frame Editer")),
+                styles({
+                    alignSelf: "center",
+                }),
+            ]
         ],
 
         [
@@ -58,7 +71,7 @@ import { body } from "./ui/body.js";
                 styles({
                     position: "absolute",
                     left: "45px",
-                    right: "45px",
+                    right: "39px",
                     height: "100%",
                     top: "0"
                 }),
@@ -75,13 +88,24 @@ import { body } from "./ui/body.js";
                     bindValue(leftBarContext, "nowPageElement")
                 ],
 
+                [ // 主体上方选项卡
+                    styles({
+                        position: "absolute",
+                        left: "200px",
+                        right: "0",
+                        top: "0",
+                        height: "33px",
+                        backgroundColor: "rgb(25, 25, 25)"
+                    })
+                ],
+
                 [ // 编辑器主体
                     styles({
                         position: "absolute",
-                        right: "0",
                         left: "200px",
-                        top: "0",
-                        height: "100%",
+                        right: "0",
+                        top: "33px",
+                        bottom: "0",
                         backgroundColor: "rgb(7, 7, 7)"
                     }),
 
@@ -93,33 +117,55 @@ import { body } from "./ui/body.js";
                             top: "0",
                             height: "100%",
                             borderRight: "1px solid rgba(190, 190, 190, 0.3)",
-                            boxSizing: "border-box"
+                            boxSizing: "border-box",
+                            backgroundColor: "rgb(17, 17, 17)"
                         }),
-                        [ // 控件列表
-
+                        [ // 预制片段列表
+                            styles({
+                                position: "absolute",
+                                left: "0",
+                                width: "100%",
+                                top: "0",
+                                height: "50%",
+                                borderBottom: "1px solid rgba(190, 190, 190, 0.3)",
+                                boxSizing: "border-box"
+                            }),
                         ],
-                        [ // 文档树
-
+                        [ // 节点树列表
+                            styles({
+                                position: "absolute",
+                                left: "0",
+                                width: "100%",
+                                top: "50%",
+                                bottom: "0",
+                                boxSizing: "border-box"
+                            }),
                         ]
                     ],
 
                     [ // 预览视图
-                        nTagName.iframe,
-                        new NAttr("src", "about:blank"),
-                        new NAttr("sandbox", "allow-scripts"),
-                        new NAttr("allow", ""),
                         styles({
                             position: "absolute",
                             left: "270px",
                             right: "250px",
                             top: "0",
                             height: "100%",
-                            border: "0",
                             boxSizing: "border-box"
                         }),
+                        [
+                            nTagName.iframe,
+                            new NAttr("src", "about:blank"),
+                            new NAttr("sandbox", "allow-scripts"),
+                            new NAttr("allow", ""),
+                            styles({
+                                border: "0",
+                                width: "100%",
+                                height: "100%"
+                            })
+                        ]
                     ],
 
-                    [ // 右侧列表
+                    [ // 右侧详情列表
                         styles({
                             position: "absolute",
                             right: "0",
@@ -127,7 +173,8 @@ import { body } from "./ui/body.js";
                             top: "0",
                             height: "100%",
                             borderLeft: "1px solid rgba(190, 190, 190, 0.3)",
-                            boxSizing: "border-box"
+                            boxSizing: "border-box",
+                            backgroundColor: "rgb(17, 17, 17)"
                         }),
                     ]
                 ],
@@ -170,4 +217,6 @@ import { body } from "./ui/body.js";
 
 
     initLeftBar();
+    initRightBar();
+    initEditer();
 })();

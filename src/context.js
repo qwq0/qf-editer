@@ -16,5 +16,12 @@ export let leftBarContext = createHookObj({
 
 export let projectContext = {
     /** @type {FileSystemDirectoryHandle} */
-    fileSystemDirectoryHandle: null
+    fileSystemDirectoryHandle: null,
+    info: createHookObj({
+        projectName: ""
+    })
 };
+
+export let editerContext = createHookObj({
+    nowFilePath: ""
+});
