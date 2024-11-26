@@ -1,5 +1,6 @@
 import { delayPromise, EventHandler, eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
 import { projectContext } from "../context.js";
+import { editerOpenFile } from "../editer/operate/openFile.js";
 import { buttonAsse } from "../ui/button.js";
 import { CursorMenu } from "../ui/CursorMenu.js";
 import { showInfoBox, showInputBox } from "../ui/infobox.js";
@@ -7,7 +8,9 @@ import { showMenu } from "../ui/menu.js";
 import { showNotice } from "../ui/Notice.js";
 import { createLeftBarPage } from "./leftBarPage.js";
 
-
+/**
+ * 忽略的目录名集合
+ */
 let ignoredDirectorySet = new Set([".git"]);
 
 /**
@@ -21,6 +24,11 @@ class DirectoryNode
     name = "";
 
     /**
+     * 基于项目文件夹的相对路径
+     */
+    path = "";
+
+    /**
      * 子目录节点
      * @type {Array<DirectoryNode>}
      */
@@ -30,6 +38,7 @@ class DirectoryNode
      * 子文件
      * @type {Array<{
      *  name: string,
+     *  path: string,
      *  element?: NElement,
      *  handle: FileSystemFileHandle
      * }>}
@@ -57,14 +66,17 @@ class DirectoryNode
 
     /**
      * @param {string} name
-     * @param {number} deepth
-     * @param {number} deepth
+     * @param {DirectoryNode} [parentNode]
      */
-    constructor(name, deepth)
+    constructor(name, parentNode)
     {
         this.name = name;
-        this.deepth = deepth;
-        this.element = DirectoryNode.createElement(name, deepth, this);
+        if (parentNode)
+        {
+            this.deepth = parentNode.deepth + 1;
+            this.path = parentNode.path + "/" + this.name;
+        }
+        this.element = DirectoryNode.createElement(name, this.deepth, this.path, this);
     }
 
     /**
@@ -103,7 +115,7 @@ class DirectoryNode
 
                 while (directoryInd < this.childs.length && this.childs[directoryInd].name < o[0])
                 { // 已经不存在
-                    this.childs[directoryInd].nodeRemoved();
+                    this.childs[directoryInd].nodeRemove();
                     this.childs.splice(directoryInd, 1);
                 }
 
@@ -113,7 +125,7 @@ class DirectoryNode
                 }
                 else
                 { // 原先不存在的
-                    let node = new DirectoryNode(o[0], this.deepth + 1);
+                    let node = new DirectoryNode(o[0], this);
                     node.handle = o[1];
                     this.childs.splice(directoryInd, 0, node);
                     if (this.unfolded)
@@ -141,9 +153,11 @@ class DirectoryNode
                 }
                 else
                 { // 原先不存在的
+                    let path = this.path + "/" + o[0];
                     let node = {
                         name: o[0],
-                        element: DirectoryNode.createElement(o[0], this.deepth + 1),
+                        path: path,
+                        element: DirectoryNode.createElement(o[0], this.deepth + 1, path),
                         handle: o[1]
                     };
                     this.files.splice(fileInd, 0, node);
@@ -162,7 +176,7 @@ class DirectoryNode
         }
         while (directoryInd < this.childs.length)
         { // 还未处理的已经不存在的文件夹
-            this.childs[directoryInd].nodeRemoved();
+            this.childs[directoryInd].nodeRemove();
             this.childs.splice(directoryInd, 1);
         }
         while (fileInd < this.files.length)
@@ -175,22 +189,14 @@ class DirectoryNode
 
     /**
      * 移除节点
-     * 移除此节点和所有子节点
+     * 移除此节点和所有子节点的显示元素
      */
-    nodeRemoved()
+    nodeRemove()
     {
         if (this.unfolded)
         {
             this.unfolded = false;
             this.onFold.trigger();
-        }
-        this.childs.forEach(o =>
-        {
-            o.nodeRemoved();
-        });
-        if (this.element)
-        {
-            this.element.remove();
         }
         this.files.forEach(o =>
         {
@@ -199,6 +205,14 @@ class DirectoryNode
                 o.element.remove();
             }
         });
+        this.childs.forEach(o =>
+        {
+            o.nodeRemove();
+        });
+        if (this.element)
+        {
+            this.element.remove();
+        }
     }
 
     /**
@@ -210,10 +224,6 @@ class DirectoryNode
         if (this.unfolded)
         {
             this.unfolded = false;
-            this.childs.forEach(o =>
-            {
-                o.nodeRemoved();
-            });
             this.files.forEach(o =>
             {
                 if (o.element)
@@ -221,8 +231,31 @@ class DirectoryNode
                     o.element.remove();
                 }
             });
+            this.childs.forEach(o =>
+            {
+                o.nodeRemove();
+            });
             this.onFold.trigger();
         }
+    }
+
+    /**
+     * 清除整个子树
+     */
+    clear()
+    {
+        this.unfolded = false;
+        this.files.forEach(o =>
+        {
+            if (o.element)
+                o.element.remove();
+        });
+        this.files = [];
+        this.childs.forEach(o =>
+        {
+            o.nodeRemove();
+        });
+        this.childs = [];
     }
 
     /**
@@ -254,9 +287,10 @@ class DirectoryNode
      * 创建列表项显示元素
      * @param {string} name
      * @param {number} deepth
+     * @param {string} filePath
      * @param {DirectoryNode} [directoryNode]
      */
-    static createElement(name, deepth, directoryNode)
+    static createElement(name, deepth, filePath, directoryNode)
     {
         let ret = NList.getElement([
             styles({
@@ -302,7 +336,7 @@ class DirectoryNode
                 }
                 else
                 { // 文件
-
+                    editerOpenFile(filePath);
                 }
             }),
             eventName.contextmenu((e) =>
@@ -440,7 +474,7 @@ export function initFileExplorer()
      */
     let fileExplorerTree = null;
 
-    let fileTree = new DirectoryNode("", 0);
+    let fileTree = new DirectoryNode("");
 
     setInterval(() =>
     {
@@ -452,6 +486,7 @@ export function initFileExplorer()
      */
     async function updateFileTree()
     {
+        fileTree.clear();
         fileTree.handle = projectContext.fileSystemDirectoryHandle;
         fileTree.name = projectContext.fileSystemDirectoryHandle.name;
         // fileExplorerTree.removeChilds();
