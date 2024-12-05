@@ -23,5 +23,14 @@ export let projectContext = {
 };
 
 export let editerContext = createHookObj({
-    nowFilePath: ""
+    nowFilePath: "",
+    nowFileName: "",
+    /** @type {NElement} */
+    snippetListElement: null,
+    /** @type {NElement} */
+    treeListElement: null,
+    /** @type {NElement<HTMLIFrameElement>} */
+    previewElement: null,
+    /** @type {NElement} */
+    detailListElement: null,
 });

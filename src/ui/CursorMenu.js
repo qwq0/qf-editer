@@ -57,7 +57,7 @@ export class CursorMenu
                 styles({
                     border: "1px solid rgba(30, 30, 70, 0.3)",
                     borderRadius: "4.5px",
-                    backgroundColor: "rgb(255, 255, 255)",
+                    backgroundColor: "rgba(255, 255, 255, 0.98)",
                     height: "fit-content",
                     width: "fit-content",
                     position: "absolute",
@@ -143,14 +143,6 @@ export class CursorMenu
             top: y + "px"
         });
 
-        this.#holderElement.animateCommit([
-            {
-                backgroundColor: "rgba(80, 80, 80, 0.01)"
-            },
-            {
-                backgroundColor: "rgba(80, 80, 80, 0.1)"
-            }
-        ], 140);
         this.#menuElement.animateCommit([
             {
                 opacity: 0.1
@@ -167,14 +159,6 @@ export class CursorMenu
     async hide()
     {
         visibleMenuSet.delete(this);
-        this.#holderElement.animateCommit([
-            {
-                backgroundColor: "rgba(80, 80, 80, 0.1)"
-            },
-            {
-                backgroundColor: "rgba(80, 80, 80, 0.01)"
-            }
-        ], 110);
         await this.#menuElement.animateCommit([
             {
                 opacity: 1

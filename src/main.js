@@ -1,5 +1,5 @@
 import { bindArrayHook, bindValue, NAttr, NList, nTagName, NTagName, styles } from "../lib/qwqframe.js";
-import { leftBarContext, projectContext } from "./context.js";
+import { editerContext, leftBarContext, projectContext } from "./context.js";
 import { initEditer } from "./editer/initEditer.js";
 import { initLeftBar } from "./leftBar/initLeftBar.js";
 import { initRightBar } from "./rightBar/initRightBar.js";
@@ -29,7 +29,9 @@ import { body } from "./ui/body.js";
             }),
 
             [
-                bindValue(projectContext.info, "projectName", o => (o ? `${o} - Q Frame Editer` : "Q Frame Editer")),
+                bindValue(projectContext.info, "projectName", o => (o ? `${o} - ` : "")),
+                bindValue(editerContext, "nowFileName", o => (o ? `${o} - ` : "")),
+                "Q Frame Editer",
                 styles({
                     alignSelf: "center",
                 }),
@@ -130,6 +132,7 @@ import { body } from "./ui/body.js";
                                 borderBottom: "1px solid rgba(190, 190, 190, 0.3)",
                                 boxSizing: "border-box"
                             }),
+                            ele => { editerContext.snippetListElement = ele; }
                         ],
                         [ // 节点树列表
                             styles({
@@ -140,6 +143,7 @@ import { body } from "./ui/body.js";
                                 bottom: "0",
                                 boxSizing: "border-box"
                             }),
+                            ele => { editerContext.treeListElement = ele; }
                         ]
                     ],
 
@@ -161,7 +165,8 @@ import { body } from "./ui/body.js";
                                 border: "0",
                                 width: "100%",
                                 height: "100%"
-                            })
+                            }),
+                            ele => { editerContext.previewElement = ele; }
                         ]
                     ],
 
@@ -176,6 +181,7 @@ import { body } from "./ui/body.js";
                             boxSizing: "border-box",
                             backgroundColor: "rgb(17, 17, 17)"
                         }),
+                        ele => { editerContext.detailListElement = ele; }
                     ]
                 ],
             ],

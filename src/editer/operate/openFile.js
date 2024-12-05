@@ -1,6 +1,7 @@
-import { NList } from "../../../lib/qwqframe.js";
+import { delayPromise, eventName, NList } from "../../../lib/qwqframe.js";
+import { editerContext } from "../../context.js";
 import { EFile } from "../../file/EFile.js";
-import { getExtName, readFileAsStr } from "../../tools/fileOperate.js";
+import { getExtName, getFileName, readFileAsStr, writeFile } from "../../tools/fileOperate.js";
 import { showInfoBox } from "../../ui/infobox.js";
 import { showMenu } from "../../ui/menu.js";
 import { showNotice } from "../../ui/Notice.js";
@@ -29,16 +30,48 @@ export async function editerOpenFile(filePath)
             {
                 showMenu([
                     NList.getElement([
-                        "初始化为完整页面"
+                        "初始化为完整页面",
+                        eventName.click(async (e) =>
+                        {
+                            let eFile = new EFile();
+                            eFile.fileType = "full_page";
+                            await writeFile(filePath, eFile.toFileContent());
+                            await delayPromise(100);
+                            editerOpenFile(filePath);
+                        })
                     ]),
                     NList.getElement([
-                        "初始化为组件"
+                        "初始化为组件",
+                        eventName.click(async (e) =>
+                        {
+                            let eFile = new EFile();
+                            eFile.fileType = "component";
+                            await writeFile(filePath, eFile.toFileContent());
+                            await delayPromise(100);
+                            editerOpenFile(filePath);
+                        })
                     ]),
                     NList.getElement([
-                        "初始化为预制件"
+                        "初始化为预制件",
+                        eventName.click(async (e) =>
+                        {
+                            let eFile = new EFile();
+                            eFile.fileType = "snippet";
+                            await writeFile(filePath, eFile.toFileContent());
+                            await delayPromise(100);
+                            editerOpenFile(filePath);
+                        })
                     ]),
                     NList.getElement([
-                        "初始化为状态节点"
+                        "初始化为状态节点",
+                        eventName.click(async (e) =>
+                        {
+                            let eFile = new EFile();
+                            eFile.fileType = "state_node";
+                            await writeFile(filePath, eFile.toFileContent());
+                            await delayPromise(100);
+                            editerOpenFile(filePath);
+                        })
                     ]),
                 ]);
             }
@@ -51,6 +84,8 @@ export async function editerOpenFile(filePath)
         )
         { // qfe的js文件
             let eFile = EFile.fromFileContent(fileContent);
+            editerContext.nowFilePath = filePath;
+            editerContext.nowFileName = getFileName(filePath);
         }
         else
         { // 无法识别的js文件

@@ -72,7 +72,7 @@ export async function writeFile(filePath, content)
 }
 
 /**
- * 获取文件扩展名
+ * 从路径获取文件扩展名
  * @param {string} filePath
  * @returns {string}
  */
@@ -84,4 +84,15 @@ export function getExtName(filePath)
         return filePath.slice(pointIndex + 1);
     else
         return "";
+}
+
+/**
+ * 从路径获取文件名
+ * @param {string} filePath
+ * @returns {string}
+ */
+export function getFileName(filePath)
+{
+    let splitIndex = filePath.lastIndexOf("/");
+    return filePath.slice(splitIndex + 1);
 }
