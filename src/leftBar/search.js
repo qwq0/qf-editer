@@ -12,7 +12,7 @@ export function initSearch()
             alignItems: "center",
             justifyContent: "center"
         }),
-        "sch"
+        "SR"
     ]), NList.getElement([
         styles({
             color: "rgb(255, 255, 255)",
@@ -27,12 +27,25 @@ export function initSearch()
             "搜索",
             styles({
                 color: "rgb(120, 120, 120)",
-                alignSelf: "start"
+                fontSize: "0.7em",
+                position: "absolute",
+                top: "0",
+                left: "0"
             })
         ],
 
+        [],
+
         [
             "TODO"
+        ],
+        [
+            "(预计在下一个中版本前完成)",
+            
+            styles({
+                color: "rgb(220, 220, 220)",
+                fontSize: "0.8em",
+            })
         ]
     ]));
 }

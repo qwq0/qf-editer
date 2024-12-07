@@ -1,5 +1,12 @@
-import { NElement } from "../../lib/qwqframe.js";
+import { eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
+import { editerContext } from "../context.js";
 import { ENode } from "../file/ENode.js";
+
+
+/**
+ * @type {WeakMap<ENode, TreeNode>}
+ */
+let nodeMap = new WeakMap();
 
 /**
  * 显示节点
@@ -23,6 +30,11 @@ class TreeNode
      * @type {ENode}
      */
     eNode = null;
+
+    /**
+     * 树状深度
+     */
+    deepth = 0;
 
     /**
      * @param {ENode} eNode
@@ -52,17 +64,104 @@ class TreeNode
     fold()
     {
     }
+
+    /**
+     * 通过原始节点获取显示节点
+     * @param {ENode} node
+     * @returns {TreeNode}
+     */
+    static getNode(node)
+    {
+        let ret = nodeMap.get(node);
+        if (!ret)
+        {
+            ret = new TreeNode(node);
+            nodeMap.set(node, ret);
+        }
+        return ret;
+    }
+
+    /**
+     * 创建列表项显示元素
+     * @param {string} name
+     * @param {number} deepth
+     */
+    static createElement(name, deepth)
+    {
+        let ret = NList.getElement([
+            styles({
+                width: "100%",
+                height: "30px",
+                lineHeight: "30px",
+                whiteSpace: "pre",
+                textOverflow: "clip",
+                paddingLeft: (deepth * 15) + "px"
+            }),
+
+            name,
+
+            eventName.click((e) =>
+            { // 左键
+                e.stopPropagation();
+            }),
+            eventName.mouseenter((e, ele) =>
+            {
+                ele.animate([
+                    {
+                        backgroundColor: "rgba(150, 150, 150, 0)"
+                    },
+                    {
+                        backgroundColor: "rgba(150, 150, 150, 0.3)"
+                    }
+                ], {
+                    duration: 75,
+                    fill: "forwards"
+                });
+            }),
+            eventName.mouseleave((e, ele) =>
+            {
+                ele.animate([
+                    {
+                        backgroundColor: "rgba(150, 150, 150, 0.3)"
+                    },
+                    {
+                        backgroundColor: "rgba(150, 150, 150, 0)"
+                    }
+                ], {
+                    duration: 75,
+                    fill: "forwards"
+                });
+            }),
+        ]);
+        return ret;
+    }
 }
 
-/**
- * @type {WeakMap<ENode, TreeNode>}
- */
-let nodeStateMap = new WeakMap();
+
 
 /**
  * 初始化节点树列表
  */
 export function initTreeList()
 {
+    /**
+     * @type {TreeNode}
+     */
+    let nowRoot = null;
 
+    function refreshList()
+    {
+        editerContext.treeListElement.removeChilds();
+        // editerContext.treeListElement.addChild();
+    }
+
+    editerContext.treeListElement.applyNList([
+        eventName.contextmenu(e =>
+        {
+            e.preventDefault();
+            e.stopPropagation();
+            if (nowRoot)
+                (/** @type {HTMLDivElement} */(nowRoot.element.node)).dispatchEvent(new MouseEvent("contextmenu", e));
+        })
+    ]);
 }

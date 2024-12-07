@@ -499,7 +499,7 @@ export function initFileExplorer()
             alignItems: "center",
             justifyContent: "center"
         }),
-        "fe"
+        "FE"
     ]), NList.getElement([
         styles({
             color: "rgb(255, 255, 255)",
@@ -514,9 +514,13 @@ export function initFileExplorer()
             "资源管理器",
             styles({
                 color: "rgb(120, 120, 120)",
-                alignSelf: "start"
+                fontSize: "0.7em",
+                position: "absolute",
+                top: "0",
+                left: "0"
             })
         ],
+        [],
         [
             buttonAsse,
             "打开项目",

@@ -1,5 +1,6 @@
 import { delayPromise, eventName, NList } from "../../../lib/qwqframe.js";
 import { editerContext } from "../../context.js";
+import { EContent } from "../../file/EContent.js";
 import { EFile } from "../../file/EFile.js";
 import { getExtName, getFileName, readFileAsStr, writeFile } from "../../tools/fileOperate.js";
 import { showInfoBox } from "../../ui/infobox.js";
@@ -19,7 +20,18 @@ export async function editerOpenFile(filePath)
     }
 
     let extName = getExtName(filePath);
-    let fileContent = await readFileAsStr(filePath);
+    let fileContent = "";
+
+    try
+    {
+        fileContent = await readFileAsStr(filePath);
+    }
+    catch (err)
+    {
+        console.error("error when read file:", filePath, err);
+        showNotice("文件打开失败", (err?.toString ? err?.toString() : "未知错误"));
+        return;
+    }
 
     if (extName == "js")
     { // js文件
@@ -83,9 +95,27 @@ export async function editerOpenFile(filePath)
             fileContent.startsWith("//qfef/")
         )
         { // qfe的js文件
-            let eFile = EFile.fromFileContent(fileContent);
-            editerContext.nowFilePath = filePath;
-            editerContext.nowFileName = getFileName(filePath);
+            /** @type {EContent} */
+            let eContent = null;
+            try
+            {
+                let eFile = EFile.fromFileContent(fileContent);
+                eContent = new EContent();
+                eContent.initFromObject(eFile.content);
+            }
+            catch (err)
+            {
+                console.error("error when open qfe file:", err);
+                showNotice("文件解析失败", (err?.toString ? err?.toString() : "未知错误"));
+                return;
+            }
+
+            if (eContent)
+            {
+                editerContext.nowFilePath = filePath;
+                editerContext.nowFileName = getFileName(filePath);
+                editerContext.nowFileCotext = eContent;
+            }
         }
         else
         { // 无法识别的js文件

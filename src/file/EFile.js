@@ -47,6 +47,9 @@ export class EFile
         version: "1"
     };
 
+    /**
+     * 反序列化content部分
+     */
     partToContent()
     {
         // @ts-ignore
@@ -80,6 +83,9 @@ export class EFile
         }
     }
 
+    /**
+     * 序列化content部分
+     */
     contentToPart()
     {
         this.contentPart = [];
@@ -95,6 +101,9 @@ export class EFile
         this.contentPart.push("*/");
     }
 
+    /**
+     * 反序列化meta部分
+     */
     partToMeta()
     {
         this.metaPart = [];
@@ -105,6 +114,9 @@ export class EFile
         });
     }
 
+    /**
+     * 序列化meta部分
+     */
     metaToPart()
     {
         this.meta = {};
