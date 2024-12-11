@@ -1,7 +1,13 @@
 // qf_editer_file/full_page
 // #qfe-slice-content
 /*
-null
+{
+    "name": "",
+    "rootMap": {
+        "main": {}
+    },
+    "stringMap": {}
+}
 */
 // #qfe-slice-generated
 // #qfe-slice-external

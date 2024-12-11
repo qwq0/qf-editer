@@ -1,9 +1,10 @@
-import { eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
+import { bindValue, eventName, NElement, NList, styles } from "../../lib/qwqframe.js";
 import { editerContext } from "../context.js";
 import { ENode } from "../file/ENode.js";
 
 
 /**
+ * 节点实例 到 显示节点 映射
  * @type {WeakMap<ENode, TreeNode>}
  */
 let nodeMap = new WeakMap();
@@ -42,6 +43,7 @@ class TreeNode
     constructor(eNode)
     {
         this.eNode = eNode;
+        this.element = TreeNode.createElement(eNode.id, this.deepth);
     }
 
     /**
@@ -149,10 +151,17 @@ export function initTreeList()
      */
     let nowRoot = null;
 
+    /**
+     * 刷新节点树列表
+     */
     function refreshList()
     {
         editerContext.treeListElement.removeChilds();
-        // editerContext.treeListElement.addChild();
+        if (!nowRoot)
+        {
+            return;
+        }
+        editerContext.treeListElement.addChild(nowRoot.element);
     }
 
     editerContext.treeListElement.applyNList([
@@ -164,4 +173,16 @@ export function initTreeList()
                 (/** @type {HTMLDivElement} */(nowRoot.element.node)).dispatchEvent(new MouseEvent("contextmenu", e));
         })
     ]);
+
+    bindValue(editerContext, "nowRootNode").bindToCallback((/** @type {ENode} */ o) =>
+    {
+        if (!o)
+        {
+            nowRoot = null;
+            refreshList();
+            return;
+        }
+        nowRoot = TreeNode.getNode(o);
+        refreshList();
+    }).emit();
 }

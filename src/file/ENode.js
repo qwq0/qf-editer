@@ -70,11 +70,14 @@ export class ENode
             ret.type = obj.type;
         if (obj.id != undefined)
             ret.id = obj.id;
-        if (Object.keys(obj.attribute).length > 0)
+        if (obj.attribute != undefined && Object.keys(obj.attribute).length > 0)
             ret.attribute = Object.assign({}, obj.attribute);
-        if (obj.childs.length > 0)
+        if (obj.childs != undefined && obj.childs.length > 0)
             ret.childs = obj.childs.map(o => ENode.fromContentNode(o));
 
         return ret;
     }
+
+    static create()
+    { }
 }

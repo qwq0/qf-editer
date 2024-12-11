@@ -27,6 +27,8 @@ export let editerContext = createHookObj({
     nowFileName: "",
     /** @type {import("./file/EContent.js").EContent} */
     nowFileCotext: null,
+    /** @type {import("./file/ENode.js").ENode} */
+    nowRootNode: null,
 
     /** @type {NElement} */
     snippetListElement: null,

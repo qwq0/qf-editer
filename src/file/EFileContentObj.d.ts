@@ -23,5 +23,6 @@ type EFCRefNode = {
 export type EfileContentObj = {
     name?: string;
     rootMap?: Object<string, EFCNode>;
+    defaultTree?: string;
     stringMap?: Object<string, string>;
 };

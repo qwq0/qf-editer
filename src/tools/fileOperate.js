@@ -56,14 +56,14 @@ export async function readFileAsStr(filePath)
  * @param {string} filePath
  * @param {string | Uint8Array} content
  */
-export async function writeFile(filePath, content)
+export async function writeFile(filePath, content, create = false)
 {
     if (!projectContext.fileSystemDirectoryHandle)
         throw "cannot write file because the project directory handle was not found";
     let path = filePath.split("/");
     if (path[0] == "")
         path = path.slice(1);
-    let fileHandle = await (await getDirectoryHandle(path.slice(0, -1), true)).getFileHandle(path.at(-1), { create: true });
+    let fileHandle = await (await getDirectoryHandle(path.slice(0, -1), create)).getFileHandle(path.at(-1), { create: create });
     let writable = await fileHandle.createWritable({ keepExistingData: false });
     let rawContent = (typeof (content) == "string" ? (new TextEncoder()).encode(content) : content);
     await writable.write(rawContent);

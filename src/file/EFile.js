@@ -1,6 +1,7 @@
+import { EContent } from "./EContent.js";
+
 /**
  * 表示一个qfe文件的类
- * @template {Object} T
  */
 export class EFile
 {
@@ -35,7 +36,7 @@ export class EFile
 
     /**
      * 内容
-     * @type {T}
+     * @type {EContent}
      */
     content = null;
 
@@ -48,12 +49,19 @@ export class EFile
     };
 
     /**
+     * @param {EContent} [content]
+     */
+    constructor(content = null)
+    {
+        this.content = content;
+    }
+
+    /**
      * 反序列化content部分
      */
     partToContent()
     {
-        // @ts-ignore
-        this.content = {};
+        let contentObj = {};
 
         let startLineIndex = 0;
         let endLineIndex = this.contentPart.length - 1;
@@ -70,16 +78,18 @@ export class EFile
         let contentJson = this.contentPart.slice(startLineIndex + 1, endLineIndex).join("\n");
         try
         {
-            this.content = JSON.parse(contentJson);
-            if (this.content == null)
+            contentObj = JSON.parse(contentJson);
+            if (contentObj == null)
             {
-                // @ts-ignore
-                this.content = {};
+                contentObj = {};
             }
+            this.content = new EContent();
+            this.content.initFromObject(contentObj);
         }
         catch (err)
         {
             console.error("file part to content error:", err);
+            this.content = null;
         }
     }
 
@@ -90,7 +100,7 @@ export class EFile
     {
         this.contentPart = [];
 
-        let contentJson = JSON.stringify((this.content ? this.content : {}), undefined, 4);
+        let contentJson = JSON.stringify((this.content ? this.content.toContentObject() : {}), undefined, 4);
         contentJson.replaceAll("*/", "*\\/");
 
         this.contentPart.push("/*");

@@ -29,6 +29,14 @@ export class EContent
     stringMap = new Map();
 
     /**
+     * @returns {ENode}
+     */
+    get defaultRoot()
+    {
+        return this.rootMap.get(this.defaultTreeKey);
+    }
+
+    /**
      * 序列化为对象
      * @returns {import("./EFileContentObj.d.ts").EfileContentObj}
      */
@@ -37,6 +45,7 @@ export class EContent
         let ret = {
             name: this.name,
             rootMap: {},
+            defaultTree: this.defaultTreeKey,
             stringMap: {}
         };
         this.rootMap.forEach((o, key) =>
@@ -71,6 +80,15 @@ export class EContent
             this.name = "";
         }
 
+        if (obj.defaultTree)
+        {
+            this.defaultTreeKey = obj.defaultTree;
+        }
+        else
+        {
+            this.defaultTreeKey = "main";
+        }
+
         if (obj.rootMap)
         {
             this.rootMap = new Map(
@@ -90,5 +108,27 @@ export class EContent
         {
             this.stringMap = new Map();
         }
+    }
+
+    /**
+     * 初始化为新内容实例
+     */
+    initAsNew()
+    {
+        this.name = "";
+        this.defaultTreeKey = "main";
+        this.rootMap = new Map();
+        this.rootMap.set("main", new ENode());
+        this.stringMap = new Map();
+    }
+
+    /**
+     * 创建并初始化为一个页面
+     */
+    static createAsPage()
+    {
+        let ret = new EContent();
+        ret.initAsNew();
+        return ret;
     }
 }

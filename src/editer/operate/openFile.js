@@ -7,6 +7,23 @@ import { showInfoBox } from "../../ui/infobox.js";
 import { showMenu } from "../../ui/menu.js";
 import { showNotice } from "../../ui/Notice.js";
 
+
+/**
+ * 初始化并重新打开文件
+ * @param {string} filePath 
+ * @param {string} type 
+ */
+async function initAndOpenFile(filePath, type)
+{
+    showNotice("初始化文件", "正在初始化文件...");
+    let eFile = new EFile(EContent.createAsPage());
+    eFile.fileType = type;
+    await writeFile(filePath, eFile.toFileContent());
+    showNotice("初始化文件", "已初始化文件");
+    await delayPromise(100);
+    editerOpenFile(filePath);
+}
+
 /**
  * 在编辑器中打开文件
  * @param {string} filePath
@@ -43,46 +60,30 @@ export async function editerOpenFile(filePath)
                 showMenu([
                     NList.getElement([
                         "初始化为完整页面",
-                        eventName.click(async (e) =>
+                        eventName.click((e) =>
                         {
-                            let eFile = new EFile();
-                            eFile.fileType = "full_page";
-                            await writeFile(filePath, eFile.toFileContent());
-                            await delayPromise(100);
-                            editerOpenFile(filePath);
+                            initAndOpenFile(filePath, "full_page");
                         })
                     ]),
                     NList.getElement([
                         "初始化为组件",
-                        eventName.click(async (e) =>
+                        eventName.click((e) =>
                         {
-                            let eFile = new EFile();
-                            eFile.fileType = "component";
-                            await writeFile(filePath, eFile.toFileContent());
-                            await delayPromise(100);
-                            editerOpenFile(filePath);
+                            initAndOpenFile(filePath, "component");
                         })
                     ]),
                     NList.getElement([
                         "初始化为预制件",
-                        eventName.click(async (e) =>
+                        eventName.click((e) =>
                         {
-                            let eFile = new EFile();
-                            eFile.fileType = "snippet";
-                            await writeFile(filePath, eFile.toFileContent());
-                            await delayPromise(100);
-                            editerOpenFile(filePath);
+                            initAndOpenFile(filePath, "snippet");
                         })
                     ]),
                     NList.getElement([
                         "初始化为状态节点",
-                        eventName.click(async (e) =>
+                        eventName.click((e) =>
                         {
-                            let eFile = new EFile();
-                            eFile.fileType = "state_node";
-                            await writeFile(filePath, eFile.toFileContent());
-                            await delayPromise(100);
-                            editerOpenFile(filePath);
+                            initAndOpenFile(filePath, "state_node");
                         })
                     ]),
                 ]);
@@ -115,6 +116,7 @@ export async function editerOpenFile(filePath)
                 editerContext.nowFilePath = filePath;
                 editerContext.nowFileName = getFileName(filePath);
                 editerContext.nowFileCotext = eContent;
+                editerContext.nowRootNode = eContent.defaultRoot;
             }
         }
         else

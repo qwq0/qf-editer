@@ -283,6 +283,97 @@ class DirectoryNode
         this.refresh();
     }
 
+    onClick()
+    {
+        if (this.unfolded)
+            this.fold();
+        else
+            this.unfold();
+    }
+
+    /**
+     * @param {{ clientX: number, clientY: number }} e
+     */
+    onContextmenu(e)
+    {
+        if (!this.handle)
+            return;
+        CursorMenu.showMenu([
+            {
+                text: "新建文件",
+                callback: async () =>
+                {
+                    let name = await showInputBox("创建文件", "请输入文件夹名", true);
+                    if (name != undefined)
+                    {
+                        if (name != "")
+                        {
+                            try
+                            {
+                                await this.handle.getFileHandle(name, { create: false });
+                                showNotice("创建失败", "文件已经存在");
+                                return;
+                            }
+                            catch (err) { }
+
+                            try
+                            {
+                                await this.handle.getFileHandle(name, { create: true });
+                                await delayPromise(120);
+                                this.unfold();
+                            }
+                            catch (err)
+                            {
+                                console.error(err);
+                                showNotice("创建失败", "创建文件失败");
+                            }
+                        }
+                        else
+                        {
+                            showNotice("创建失败", "文件名不可为空");
+                        }
+                    }
+                }
+            },
+            {
+                text: "新建文件夹",
+                callback: async () =>
+                {
+                    let name = await showInputBox("创建文件夹", "请输入文件夹名", true);
+                    if (name != undefined)
+                    {
+                        if (name != "")
+                        {
+                            try
+                            {
+                                await this.handle.getDirectoryHandle(name, { create: false });
+                                showNotice("创建失败", "文件夹已经存在");
+                                return;
+                            }
+                            catch (err) { }
+
+                            try
+                            {
+                                await this.handle.getDirectoryHandle(name, { create: true });
+                                await delayPromise(120);
+                                this.unfold();
+                            }
+                            catch (err)
+                            {
+                                console.error(err);
+                                showNotice("创建失败", "创建文件夹失败");
+                            }
+                        }
+                        else
+                        {
+                            showNotice("创建失败", "文件夹名不可为空");
+                        }
+                    }
+                }
+            }
+        ], e.clientX, e.clientY);
+    }
+
     /**
      * 创建列表项显示元素
      * @param {string} name
@@ -329,10 +420,7 @@ class DirectoryNode
                 e.stopPropagation();
                 if (directoryNode)
                 { // 文件夹
-                    if (directoryNode.unfolded)
-                        directoryNode.fold();
-                    else
-                        directoryNode.unfold();
+                    directoryNode.onClick();
                 }
                 else
                 { // 文件
@@ -345,82 +433,7 @@ class DirectoryNode
                 e.preventDefault();
                 if (directoryNode)
                 { // 文件夹
-                    if (!directoryNode.handle)
-                        return;
-                    CursorMenu.showMenu([
-                        {
-                            text: "新建文件",
-                            callback: async () =>
-                            {
-                                let name = await showInputBox("创建文件", "请输入文件夹名", true);
-                                if (name != undefined)
-                                {
-                                    if (name != "")
-                                    {
-                                        try
-                                        {
-                                            await directoryNode.handle.getFileHandle(name, { create: false });
-                                            showNotice("创建失败", "文件已经存在");
-                                            return;
-                                        }
-                                        catch (err) { }
-
-                                        try
-                                        {
-                                            await directoryNode.handle.getFileHandle(name, { create: true });
-                                            await delayPromise(120);
-                                            directoryNode.unfold();
-                                        }
-                                        catch (err)
-                                        {
-                                            console.error(err);
-                                            showNotice("创建失败", "创建文件失败");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        showNotice("创建失败", "文件名不可为空");
-                                    }
-                                }
-                            }
-                        },
-                        {
-                            text: "新建文件夹",
-                            callback: async () =>
-                            {
-                                let name = await showInputBox("创建文件夹", "请输入文件夹名", true);
-                                if (name != undefined)
-                                {
-                                    if (name != "")
-                                    {
-                                        try
-                                        {
-                                            await directoryNode.handle.getDirectoryHandle(name, { create: false });
-                                            showNotice("创建失败", "文件夹已经存在");
-                                            return;
-                                        }
-                                        catch (err) { }
-
-                                        try
-                                        {
-                                            await directoryNode.handle.getDirectoryHandle(name, { create: true });
-                                            await delayPromise(120);
-                                            directoryNode.unfold();
-                                        }
-                                        catch (err)
-                                        {
-                                            console.error(err);
-                                            showNotice("创建失败", "创建文件夹失败");
-                                        }
-                                    }
-                                    else
-                                    {
-                                        showNotice("创建失败", "文件夹名不可为空");
-                                    }
-                                }
-                            }
-                        }
-                    ], e.clientX, e.clientY);
+                    directoryNode.onContextmenu(e);
                 }
                 else
                 { // 文件
@@ -564,6 +577,10 @@ export function initFileExplorer()
                     projectContext.fileSystemDirectoryHandle = fileSystemDirectoryHandle;
                     updateFileTree();
                 }
+                else
+                {
+                    showNotice("无法访问", "浏览器不支持或策略禁止访问本地文件");
+                }
             })
         ],
 
@@ -594,7 +611,7 @@ export function initFileExplorer()
             {
                 e.preventDefault();
                 e.stopPropagation();
-                (/** @type {HTMLDivElement} */(fileTree.element.node)).dispatchEvent(new MouseEvent("contextmenu", e));
+                fileTree.onContextmenu(e);
             })
         ]
     ]));
