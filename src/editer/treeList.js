@@ -3,14 +3,9 @@ import { editerContext } from "../context.js";
 import { ENode } from "../file/ENode.js";
 
 
-/**
- * 节点实例 到 显示节点 映射
- * @type {WeakMap<ENode, TreeNode>}
- */
-let nodeMap = new WeakMap();
 
 /**
- * 显示节点
+ * 显示节点类
  */
 class TreeNode
 {
@@ -37,6 +32,13 @@ class TreeNode
      */
     deepth = 0;
 
+
+    /**
+     * 子节点列表
+     * @type {Array<TreeNode>}
+     */
+    childs = [];
+
     /**
      * @param {ENode} eNode
      */
@@ -51,6 +53,12 @@ class TreeNode
      */
     updateChild()
     {
+        let childNodeList = this.eNode.childs;
+        let childNodeSet = new Set(childNodeList);
+        let nowIndex = 0;
+        for (let i = 0; i < childNodeList.length; i++)
+        {
+        }
     }
 
     /**
@@ -58,6 +66,16 @@ class TreeNode
      */
     unfold()
     {
+        if (!this.unfolded)
+        {
+            this.unfolded = true;
+            let lastElement = this.element;
+            this.childs.forEach(o =>
+            {
+                lastElement.insAfter(o.element);
+                lastElement = o.element;
+            });
+        }
     }
 
     /**
@@ -65,23 +83,34 @@ class TreeNode
      */
     fold()
     {
+        if (this.unfolded)
+        {
+            this.unfolded = false;
+            this.childs.forEach(o =>
+            {
+                o.nodeRemove();
+            });
+        }
     }
 
+
     /**
-     * 通过原始节点获取显示节点
-     * @param {ENode} node
-     * @returns {TreeNode}
+     * 移除节点
+     * 移除此节点和所有子节点的显示元素
      */
-    static getNode(node)
+    nodeRemove()
     {
-        let ret = nodeMap.get(node);
-        if (!ret)
+        if (this.unfolded)
         {
-            ret = new TreeNode(node);
-            nodeMap.set(node, ret);
+            this.unfolded = false;
         }
-        return ret;
+        this.childs.forEach(o =>
+        {
+            o.nodeRemove();
+        });
+        this.element.remove();
     }
+
 
     /**
      * 创建列表项显示元素
@@ -182,7 +211,7 @@ export function initTreeList()
             refreshList();
             return;
         }
-        nowRoot = TreeNode.getNode(o);
+        nowRoot = new TreeNode(o);
         refreshList();
     }).emit();
 }

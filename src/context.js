@@ -1,6 +1,8 @@
-import { createHookArray, createHookObj, NElement, NLocate } from "../lib/qwqframe.js";
+import { createHookArray, createHookObj, EventHandler, NElement, NLocate } from "../lib/qwqframe.js";
 
-// 左侧栏上下文
+/**
+ * 左侧栏上下文
+ */
 export let leftBarContext = createHookObj({
     nowPageElement: new NLocate(),
     nowPageButton: null,
@@ -14,14 +16,29 @@ export let leftBarContext = createHookObj({
     pages: createHookArray([])
 });
 
+/**
+ * 当前项目上下文
+ */
 export let projectContext = {
     /** @type {FileSystemDirectoryHandle} */
     fileSystemDirectoryHandle: null,
     info: createHookObj({
         projectName: ""
-    })
+    }),
+    /**
+     * 项目上下文事件
+     */
+    events: {
+        /**
+         * 打开项目事件
+         */
+        open: new EventHandler()
+    }
 };
 
+/**
+ * 中间的编辑器上下文
+ */
 export let editerContext = createHookObj({
     nowFilePath: "",
     nowFileName: "",

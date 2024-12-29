@@ -1,5 +1,5 @@
 /**
- * 元素节点
+ * 元素节点类
  */
 export class ENode
 {

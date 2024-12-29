@@ -14,7 +14,7 @@ import { createLeftBarPage } from "./leftBarPage.js";
 let ignoredDirectorySet = new Set([".git"]);
 
 /**
- * 目录节点
+ * 目录节点类
  */
 class DirectoryNode
 {
@@ -506,6 +506,11 @@ export function initFileExplorer()
         fileTree.unfold();
     }
 
+    projectContext.events.open.add(() =>
+    {
+        updateFileTree();
+    });
+
     createLeftBarPage("fileExplorer", NList.getElement([
         styles({
             display: "flex",
@@ -538,7 +543,7 @@ export function initFileExplorer()
             buttonAsse,
             "打开项目",
             eventName.click(async (e) =>
-            {
+            { // 打开项目
                 if (window.showDirectoryPicker)
                 {
                     let fileSystemDirectoryHandle = await window.showDirectoryPicker({
@@ -575,7 +580,7 @@ export function initFileExplorer()
 
                     projectContext.info.projectName = fileSystemDirectoryHandle.name;
                     projectContext.fileSystemDirectoryHandle = fileSystemDirectoryHandle;
-                    updateFileTree();
+                    projectContext.events.open.trigger();
                 }
                 else
                 {
