@@ -38,6 +38,9 @@ function refreshSnippetListInfo()
     let ret = new SnippetItem();
     ret.displayName = "div";
     snippetList.push(ret);
+    let ret1 = new SnippetItem();
+    ret1.displayName = "div";
+    snippetList.push(ret1);
 }
 
 /**
@@ -59,7 +62,8 @@ export function initSnippetList()
                     height: "94px",
                     border: "1px solid rgba(255, 255, 255, 0.1)",
                     boxSizing: "border-box",
-                    color: "rgb(190, 190, 190)"
+                    color: "rgb(190, 190, 190)",
+                    margin: "0"
                 }),
                 o.displayName
             ]));
@@ -68,7 +72,8 @@ export function initSnippetList()
 
     editerContext.snippetListElement.applyNList([
         styles({
-            display: "grid"
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(70px, 1fr))"
         }),
         eventName.contextmenu(e =>
         {
